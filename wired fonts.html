@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Weird Fonts生成</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 20px 16px 40px;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        /* 头部卡片 */
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 0 0 8px 0;
+        }
+
+        .sub {
+            color: #6b7280;
+            font-size: 0.85rem;
+            border-top: 1px solid #e5e7eb;
+            display: inline-block;
+            padding-top: 6px;
+        }
+
+        /* 输入区域 */
+        .input-section {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #374151;
+        }
+
+        .label-icon {
+            font-size: 1.2rem;
+        }
+
+        textarea, select, .result-box {
+            font-size: 1rem;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: 0.2s;
+            width: 100%;
+            font-family: 'SF Mono', ui-monospace, monospace;
+        }
+
+        textarea {
+            padding: 14px 16px;
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.5;
+            outline: none;
+            border-color: #cbd5e1;
+        }
+
+        textarea:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+        }
+
+        /* 样式选择 + 转换按钮 行 */
+        .style-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        .style-select-wrapper {
+            flex: 2;
+            min-width: 160px;
+        }
+
+        select {
+            padding: 12px 14px;
+            background-color: #f9fafb;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+        }
+
+        .convert-btn {
+            flex: 1;
+            background: linear-gradient(105deg, #3b82f6, #8b5cf6);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 8px rgba(59,130,246,0.2);
+            text-align: center;
+        }
+
+        .convert-btn:active {
+            transform: scale(0.97);
+            background: linear-gradient(105deg, #2563eb, #7c3aed);
+        }
+
+        /* 结果区域 (有限展示 + 复制按钮) */
+        .result-section {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            padding: 20px 18px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .result-header span:first-child {
+            font-weight: 500;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1f2937;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .copy-btn:active {
+            background: #e5e7eb;
+            transform: scale(0.96);
+        }
+
+        /* 有限展示文本框 —— 适合手机，固定3行高度，滚动 */
+        .result-box {
+            background: #fefcf5;
+            border: 1px solid #e9e5d5;
+            padding: 14px 16px;
+            min-height: 90px;
+            max-height: 120px;
+            overflow-y: auto;
+            word-break: break-word;
+            white-space: pre-wrap;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            line-height: 1.45;
+            resize: vertical;
+            border-radius: 24px;
+            color: #1e293b;
+        }
+
+        .result-box[readonly] {
+            cursor: text;
+            background-color: #ffffff;
+        }
+
+        /* 底部提示 */
+        .info-note {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 30px;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        /* 触屏优化 */
+        @media (max-width: 500px) {
+            body {
+                padding: 16px 12px 32px;
+            }
+            .convert-btn {
+                font-size: 0.9rem;
+            }
+            .result-box {
+                max-height: 100px;
+            }
+        }
+        /* --- 新增粘贴按钮样式 --- */
+        .label-paste-btn {
+            padding: 4px 14px;
+            border-radius: 30px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 0.8rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        .label-paste-btn:active {
+            background: #e2e8f0;
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>✨ 𝚆𝚎𝚒𝚛𝚍 𝙵𝚘𝚗𝚝𝚜</h1>
+        <div class="sub">Unicode 花样字符生成</div>
+    </div>
+
+    <div class="input-section">
+        <div class="label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <span class="label-icon">📝</span> 输入原始文本
+            </span>
+            <button id="pasteBtn" class="label-paste-btn">📋 粘贴</button>
+        </div>
+        <textarea id="sourceText" placeholder="Type here......" rows="3">I love you three thousand.</textarea>
+
+        <div class="style-row">
+            <div class="style-select-wrapper">
+                <select id="styleSelect"></select>
+            </div>
+            <button class="convert-btn" id="convertBtn">⚡ 转换</button>
+        </div>
+    </div>
+
+    <div class="result-section">
+        <div class="result-header">
+            <span>🎨 转换结果 <span style="font-size:12px; opacity:0.6;">(可上下滚动)</span></span>
+            <button class="copy-btn" id="copyBtn">📋 复制文本</button>
+        </div>
+        <!-- 有限展示文本框：只读，高度受限，手机易操作 -->
+        <div class="result-box" id="resultBox" readonly contenteditable="false"></div>
+        <div class="info-note">
+            💡 点击“转换”生成特殊字体
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ----------------------------------------------
+        // 1. 根据 parseTable.js 原始数据定义字母表和数字表字符串
+        // 完全复制自提供的文件内容，保留原始特殊Unicode字符
+        // ----------------------------------------------
+        const alphabetStr = `A	𝐀	𝐴	𝑨	𝖠	𝗔	𝘈	𝘼	𝒜	𝓐	𝔄	𝕬	𝙰	𝔸
+B	𝐁	𝐵	𝑩	𝖡	𝗕	𝘉	𝘽	ℬ	𝓑	𝔅	𝕭	𝙱	𝔹
+C	𝐂	𝐶	𝑪	𝖢	𝗖	𝘊	𝘾	𝒞	𝓒	ℭ	𝕮	𝙲	ℂ
+D	𝐃	𝐷	𝑫	𝖣	𝗗	𝘋	𝘿	𝒟	𝓓	𝔇	𝕯	𝙳	𝔻
+E	𝐄	𝐸	𝑬	𝖤	𝗘	𝘌	𝙀	ℰ	𝓔	𝔈	𝕰	𝙴	𝔼
+F	𝐅	𝐹	𝑭	𝖥	𝗙	𝘍	𝙁	ℱ	𝓕	𝔉	𝕱	𝙵	𝔽
+G	𝐆	𝐺	𝑮	𝖦	𝗚	𝘎	𝙂	𝒢	𝓖	𝔊	𝕲	𝙶	𝔾
+H	𝐇	𝐻	𝑯	𝖧	𝗛	𝘏	𝙃	ℋ	𝓗	ℌ	𝕳	𝙷	ℍ
+I	𝐈	𝐼	𝑰	𝖨	𝗜	𝘐	𝙄	ℐ	𝓘	ℑ	𝕴	𝙸	𝕀
+J	𝐉	𝐽	𝑱	𝖩	𝗝	𝘑	𝙅	𝒥	𝓙	𝔍	𝕵	𝙹	𝕁
+K	𝐊	𝐾	𝑲	𝖪	𝗞	𝘒	𝙆	𝒦	𝓚	𝔎	𝕶	𝙺	𝕂
+L	𝐋	𝐿	𝑳	𝖫	𝗟	𝘓	𝙇	ℒ	𝓛	𝔏	𝕷	𝙻	𝕃
+M	𝐌	𝑀	𝑴	𝖬	𝗠	𝘔	𝙈	ℳ	𝓜	𝔐	𝕸	𝙼	𝕄
+N	𝐍	𝑁	𝑵	𝖭	𝗡	𝘕	𝙉	𝒩	𝓝	𝔑	𝕹	𝙽	ℕ
+O	𝐎	𝑂	𝑶	𝖮	𝗢	𝘖	𝙊	𝒪	𝓞	𝔒	𝕺	𝙾	𝕆
+P	𝐏	𝑃	𝑷	𝖯	𝗣	𝘗	𝙋	𝒫	𝓟	𝔓	𝕻	𝙿	ℙ
+Q	𝐐	𝑄	𝑸	𝖰	𝗤	𝘘	𝙌	𝒬	𝓠	𝔔	𝕼	𝚀	ℚ
+R	𝐑	𝑅	𝑹	𝖱	𝗥	𝘙	𝙍	ℛ	𝓡	ℜ	𝕽	𝚁	ℝ
+S	𝐒	𝑆	𝑺	𝖲	𝗦	𝘚	𝙎	𝒮	𝓢	𝔖	𝕾	𝚂	𝕊
+T	𝐓	𝑇	𝑻	𝖳	𝗧	𝘛	𝙏	𝒯	𝓣	𝔗	𝕿	𝚃	𝕋
+U	𝐔	𝑈	𝑼	𝖴	𝗨	𝘜	𝙐	𝒰	𝓤	𝔘	𝖀	𝚄	𝕌
+V	𝐕	𝑉	𝑽	𝖵	𝗩	𝘝	𝙑	𝒱	𝓥	𝔙	𝖁	𝚅	𝕍
+W	𝐖	𝑊	𝑾	𝖶	𝗪	𝘞	𝙒	𝒲	𝓦	𝔚	𝖂	𝚆	𝕎
+X	𝐗	𝑋	𝑿	𝖷	𝗫	𝘟	𝙓	𝒳	𝓧	𝔛	𝖃	𝚇	𝕏
+Y	𝐘	𝑌	𝒀	𝖸	𝗬	𝘠	𝙔	𝒴	𝓨	𝔜	𝖄	𝚈	𝕐
+Z	𝐙	𝑍	𝒁	𝖹	𝗭	𝘡	𝙕	𝒵	𝓩	ℨ	𝖅	𝚉	ℤ
+a	𝐚	𝑎	𝒂	𝖺	𝗮	𝘢	𝙖	𝒶	𝓪	𝔞	𝖆	𝚊	𝕒
+b	𝐛	𝑏	𝒃	𝖻	𝗯	𝘣	𝙗	𝒷	𝓫	𝔟	𝖇	𝚋	𝕓
+c	𝐜	𝑐	𝒄	𝖼	𝗰	𝘤	𝙘	𝒸	𝓬	𝔠	𝖈	𝚌	𝕔
+d	𝐝	𝑑	𝒅	𝖽	𝗱	𝘥	𝙙	𝒹	𝓭	𝔡	𝖉	𝚍	𝕕
+e	𝐞	𝑒	𝒆	𝖾	𝗲	𝘦	𝙚	ℯ	𝓮	𝔢	𝖊	𝚎	𝕖
+f	𝐟	𝑓	𝒇	𝖿	𝗳	𝘧	𝙛	𝒻	𝓯	𝔣	𝖋	𝚏	𝕗
+g	𝐠	𝑔	𝒈	𝗀	𝗴	𝘨	𝙜	ℊ	𝓰	𝔤	𝖌	𝚐	𝕘
+h	𝐡	ℎ	𝒉	𝗁	𝗵	𝘩	𝙝	𝒽	𝓱	𝔥	𝖍	𝚑	𝕙
+i	𝐢	𝑖	𝒊	𝗂	𝗶	𝘪	𝙞	𝒾	𝓲	𝔦	𝖎	𝚒	𝕚
+j	𝐣	𝑗	𝒋	𝗃	𝗷	𝘫	𝙟	𝒿	𝓳	𝔧	𝖏	𝚓	𝕛
+k	𝐤	𝑘	𝒌	𝗄	𝗸	𝘬	𝙠	𝓀	𝓴	𝔨	𝖐	𝚔	𝕜
+l	𝐥	𝑙	𝒍	𝗅	𝗹	𝘭	𝙡	𝓁	𝓵	𝔩	𝖑	𝚕	𝕝
+m	𝐦	𝑚	𝒎	𝗆	𝗺	𝘮	𝙢	𝓂	𝓶	𝔪	𝖒	𝚖	𝕞
+n	𝐧	𝑛	𝒏	𝗇	𝗻	𝘯	𝙣	𝓃	𝓷	𝔫	𝖓	𝚗	𝕟
+o	𝐨	𝑜	𝒐	𝗈	𝗼	𝘰	𝙤	ℴ	𝓸	𝔬	𝖔	𝚘	𝕠
+p	𝐩	𝑝	𝒑	𝗉	𝗽	𝘱	𝙥	𝓅	𝓹	𝔭	𝖕	𝚙	𝕡
+q	𝐪	𝑞	𝒒	𝗊	𝗾	𝘲	𝙦	𝓆	𝓺	𝔮	𝖖	𝚚	𝕢
+r	𝐫	𝑟	𝒓	𝗋	𝗿	𝘳	𝙧	𝓇	𝓻	𝔯	𝖗	𝚛	𝕣
+s	𝐬	𝑠	𝒔	𝗌	𝘀	𝘴	𝙨	𝓈	𝓼	𝔰	𝖘	𝚜	𝕤
+t	𝐭	𝑡	𝒕	𝗍	𝘁	𝘵	𝙩	𝓉	𝓽	𝔱	𝖙	𝚝	𝕥
+u	𝐮	𝑢	𝒖	𝗎	𝘂	𝘶	𝙪	𝓊	𝓾	𝔲	𝖚	𝚞	𝕦
+v	𝐯	𝑣	𝒗	𝗏	𝘃	𝘷	𝙫	𝓋	𝓿	𝔳	𝖛	𝚟	𝕧
+w	𝐰	𝑤	𝒘	𝗐	𝘄	𝘸	𝙬	𝓌	𝔀	𝔴	𝖜	𝚠	𝕨
+x	𝐱	𝑥	𝒙	𝗑	𝘅	𝘹	𝙭	𝓍	𝔁	𝔵	𝖝	𝚡	𝕩
+y	𝐲	𝑦	𝒚	𝗒	𝘆	𝘺	𝙮	𝓎	𝔂	𝔶	𝖞	𝚢	𝕪
+z	𝐳	𝑧	𝒛	𝗓	𝘇	𝘻	𝙯	𝓏	𝔃	𝔷	𝖟	𝚣	𝕫`
+
+        const numberStr = `0	𝟎	𝟘	𝟢	𝟬	𝟶
+1	𝟏	𝟙	𝟣	𝟭	𝟷
+2	𝟐	𝟚	𝟤	𝟮	𝟸
+3	𝟑	𝟛	𝟥	𝟯	𝟹
+4	𝟒	𝟜	𝟦	𝟰	𝟺
+5	𝟓	𝟝	𝟧	𝟱	𝟻
+6	𝟔	𝟞	𝟨	𝟲	𝟼
+7	𝟕	𝟟	𝟩	𝟳	𝟽
+8	𝟖	𝟠	𝟪	𝟴	𝟾
+9	𝟗	𝟡	𝟫	𝟵	𝟿`
+
+        // 样式名称列表 (与原parseTable.js中genericNames + numberNames逻辑合并后取唯一)
+        const genericNames = [
+            "serif.normal", "serif.bold", "serif.italic", "serif.bold-italic",
+            "sans-serif.normal", "sans-serif.bold", "sans-serif.italic", "sans-serif.bold-italic",
+            "script.normal", "script.bold", "fraktur.normal", "fraktur.bold",
+            "mono-space.normal", "double-struck.bold"
+        ]
+        const numberNames = [
+            "serif.normal", "serif.bold", "double-struck.bold",
+            "sans-serif.normal", "sans-serif.bold", "mono-space.normal"
+        ]
+
+        // 辅助: 将文本table转为二维数组
+        function toTable(str) {
+            return str.trim().split("\n").map(row => row.split(/\s+/));
+        }
+
+        // 矩阵转置 (列优先)
+        function mapByColumn(matrix) {
+            if (!matrix.length) return [];
+            const colLen = matrix.length;
+            const rowLen = matrix[0].length;
+            const result = [];
+            for (let r = 0; r < rowLen; r++) {
+                const column = [];
+                for (let c = 0; c < colLen; c++) {
+                    column.push(matrix[c][r]);
+                }
+                result.push(column);
+            }
+            return result;
+        }
+
+        // 构建映射 (样式名 -> 字符数组，长度为62: 26大写+26小写+10数字)
+        function buildFontMap() {
+            const alphabetTableRaw = toTable(alphabetStr);   // 52行 x 14列
+            const numberTableRaw = toTable(numberStr);       // 10行 x 6列
+
+            // 转置: 每一列对应一个样式 (按字母顺序)
+            const alphabetColumns = mapByColumn(alphabetTableRaw);   // 得到 14个数组,每个长度52
+            const numberColumns = mapByColumn(numberTableRaw);       // 得到 6个数组,每个长度10
+
+            // 建立字母映射 {样式名: 字母数组(52)}
+            const alphabetMap = {};
+            genericNames.forEach((name, idx) => {
+                if (idx < alphabetColumns.length) {
+                    alphabetMap[name] = [...alphabetColumns[idx]];
+                }
+            });
+
+            // 建立数字映射，并合并到相同样式名的字母数组后面
+            numberNames.forEach((name, idx) => {
+                if (idx < numberColumns.length && alphabetMap[name]) {
+                    alphabetMap[name].push(...numberColumns[idx]);
+                }
+            });
+
+            // 最终每个样式数组长度为 52 + 10 = 62
+            return alphabetMap;
+        }
+
+        // 全局样式映射
+        const styleMap = buildFontMap();
+        // 获取所有样式名（用于下拉选项）
+        const styleNames = Object.keys(styleMap).sort();
+
+        // 转换核心函数
+        function convertText(inputText, styleName) {
+            if (!inputText || !styleMap[styleName]) return inputText;
+            const charArray = styleMap[styleName];
+            // 预期charArray长度至少62 [A-Z a-z 0-9]
+            let result = "";
+            for (let i = 0; i < inputText.length; i++) {
+                const ch = inputText[i];
+                const code = ch.charCodeAt(0);
+                let idx = -1;
+                // 大写 A-Z
+                if (code >= 65 && code <= 90) {
+                    idx = code - 65;
+                }
+                // 小写 a-z
+                else if (code >= 97 && code <= 122) {
+                    idx = 26 + (code - 97);
+                }
+                // 数字 0-9
+                else if (code >= 48 && code <= 57) {
+                    idx = 52 + (code - 48);
+                }
+                if (idx !== -1 && idx < charArray.length) {
+                    result += charArray[idx];
+                } else {
+                    result += ch;   // 不支持的特殊字符保留原样
+                }
+            }
+            return result;
+        }
+
+        // ---------- UI 绑定 ----------
+        const sourceTextarea = document.getElementById('sourceText');
+        const styleSelect = document.getElementById('styleSelect');
+        const convertBtn = document.getElementById('convertBtn');
+        const resultBox = document.getElementById('resultBox');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // 填充下拉框
+        styleNames.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            // 美化显示名称
+            let displayName = name.replace(/\./g, ' · ');
+            displayName = displayName.replace('serif', '衬线体').replace('sans-serif', '无衬线')
+                         .replace('script', '手写体').replace('fraktur', '德文尖角')
+                         .replace('mono-space', '等宽体').replace('double-struck', '双线体');
+            option.textContent = displayName + ' (' + name + ')';
+            styleSelect.appendChild(option);
+        });
+        // 默认选中一个常见样式 "serif.normal" 或第一个
+        if (styleNames.includes("serif.normal")) styleSelect.value = "serif.normal";
+        else styleSelect.value = styleNames[0];
+
+        // 转换事件
+        function performConvert() {
+            const rawText = sourceTextarea.value;
+            const selectedStyle = styleSelect.value;
+            if (!rawText.trim() && rawText.length === 0) {
+                resultBox.innerText = '✨ 转换结果会显示在这里';
+                return;
+            }
+            const converted = convertText(rawText, selectedStyle);
+            resultBox.innerText = converted;
+        }
+
+        convertBtn.addEventListener('click', performConvert);
+        // 初始转换一下展示示例效果
+        performConvert();
+
+        // 复制功能 (手机友好)
+        copyBtn.addEventListener('click', async () => {
+            const textToCopy = resultBox.innerText;
+            if (!textToCopy || textToCopy === '✨ 转换结果会显示在这里') {
+                // 轻提示风格
+                showToast('没有可复制的内容，请先输入文字并转换', '#6b7280');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                showToast('✓ 已复制到剪贴板', '#10b981');
+            } catch (err) {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✓ 复制成功 (兼容模式)', '#10b981');
+            }
+        });
+
+            // --- 新增：粘贴按钮逻辑 ---
+            const pasteBtn = document.getElementById('pasteBtn');
+            if (pasteBtn) {
+                pasteBtn.addEventListener('click', async () => {
+                    try {
+                        // 读取剪贴板文本
+                        const text = await navigator.clipboard.readText();
+                        if (text && text.trim() !== '') {
+                            sourceTextarea.value = text;   // 填入输入框
+                            performConvert();              // 自动触发转换，省去再点一次的麻烦
+                            showToast('✅ 已粘贴并转换', '#10b981');
+                        } else {
+                            showToast('⚠️ 剪贴板为空', '#f59e0b');
+                        }
+                    } catch (err) {
+                        // 如果浏览器权限受阻，给出提示
+                        showToast('⚠️ 无法读取剪贴板，请手动粘贴', '#ef4444');
+                    }
+                });
+            }
+        // 轻提示 (无需alert)
+        function showToast(msg, bgColor = '#1f2937') {
+            let toast = document.querySelector('.custom-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'custom-toast';
+                toast.style.cssText = `
+                    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+                    background: ${bgColor}; color: white; padding: 10px 20px; border-radius: 40px;
+                    font-size: 0.85rem; z-index: 9999; backdrop-filter: blur(10px);
+                    white-space: nowrap; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                    transition: opacity 0.2s; opacity: 0; pointer-events: none;
+                    font-weight: 500; letter-spacing: 0.3px;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.style.backgroundColor = bgColor;
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 1800);
+        }
+    })();
+</script>
+</body>
+</html>
